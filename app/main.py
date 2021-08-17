@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import app.app_config as app_config
 import app.encryption as encryption
+import os
 
 app = Flask(__name__)
 app_config.configure_app(app)
@@ -22,6 +23,21 @@ def create_user_from_form(username, password_plaintext, email):
     db.session.add(user)
     db.session.commit()
 
+@app.route("/assets/<path:file_path>")
+def get_asset_file(file_path):
+    path = os.path.join(os.path.dirname(__file__), "assets")
+    return send_from_directory(path, file_path, as_attachment = True)
+
 @app.route("/")
 def home_page():
     return "welcome to caydio!"
+
+@app.route("/register/", methods = ["GET", "POST"])
+def register_page():
+    if request.method == "GET":
+        return render_template("register.html")
+    username = request.form["username"]
+    password_plaintext = request.form["password"]
+    email = request.form["email"]
+    create_user_from_form(username, password_plaintext, email)
+    return "successfully created."

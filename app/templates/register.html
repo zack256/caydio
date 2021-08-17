@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block body %}
+<div class = "container">
+    <h3 class = "title is-3">Caydio</h3>
+    <h5 class = "subtitle is-5">Register</h5>
+    <form action = "/register/" method = "POST" id = "registerForm" onsubmit = "return confirmPasswordsMatch();"></form>
+    <div class = "field">
+        <label class = "label">Email</label>
+        <div class = "control">
+            <input class = "input" type = "email" form = "registerForm" required = "required" name = "email">
+        </div>
+    </div>
+    <div class = "field">
+        <label class = "label">Username</label>
+        <div class = "control">
+            <input class = "input" type = "text" form = "registerForm" required = "required" name = "username">
+        </div>
+    </div>
+    <div class = "field">
+        <label class = "label">Password</label>
+        <div class = "control">
+            <input class = "input" type = "password" form = "registerForm" required = "required" name = "password" id = "pass1">
+        </div>
+    </div>
+    <div class = "field">
+        <label class = "label">Confirm Password</label>
+        <div class = "control">
+            <input class = "input" type = "password" form = "registerForm" required = "required" name = "password" id = "pass2">
+        </div>
+    </div>
+    <div class = "buttons">
+        <button class = "button is-success" type = "submit" form = "registerForm">Submit</button>
+        <button class = "button is-danger" type = "reset" form = "registerForm">Cancel</button>
+    </div>
+</div>
+{% endblock %}
+{% block more_bottom %}
+<script src = "/assets/js/script.js"></script>
+{% endblock %}
