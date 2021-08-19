@@ -1,7 +1,7 @@
 import os
 
 def fix_pg_db_url(s):
-    if s.startswith('postgres://"'):
+    if s.startswith("postgres://"):
         s = s.replace("postgres://", "postgresql://", 1)
     return s
 
