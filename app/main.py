@@ -17,6 +17,30 @@ class User(db.Model):
     email = db.Column(db.String(255), unique = True)
     registered = db.Column(db.DateTime(), default = db.func.now())
 
+class Artist(db.Model):
+    __tablename__ = "artists"
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(255))
+    added = db.Column(db.DateTime(), default = db.func.now())
+    videos = db.relationship("VidConnection")
+
+class Video(db.Model):
+    __tablename__ = "videos"
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(255))
+    youtube_url = db.Column(db.String(50))
+    added = db.Column(db.DateTime(), default = db.func.now())
+    users = db.relationship("VidConnection")
+
+class VidConnection(db.Model):
+    __tablename__ = "vid_connections"
+    id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    artist_id = db.Column(db.Integer(), db.ForeignKey("artists.id"), primary_key = True, autoincrement = False)
+    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id"), primary_key = True, autoincrement = False)
+    artist = db.relationship(Artist, backref = "artists_c")
+    video = db.relationship(Video, backref = "videos_c")
+    note = db.Column(db.String(255))
+
 def create_user_from_form(username, password_plaintext, email):
     user = User()
     user.username = username
