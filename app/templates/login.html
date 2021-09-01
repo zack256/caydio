@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block body %}
+<div class = "container">
+    <h3 class = "title is-3">Caydio</h3>
+    <h5 class = "subtitle is-5">Login</h5>
+    <form action = "/login/" method = "POST" id = "loginForm"></form>
+    <div class = "field">
+        <label class = "label">Username</label>
+        <div class = "control">
+            <input class = "input" type = "text" form = "loginForm" required = "required" name = "username">
+        </div>
+    </div>
+    <div class = "field">
+        <label class = "label">Password</label>
+        <div class = "control">
+            <input class = "input" type = "password" form = "loginForm" required = "required" name = "password">
+        </div>
+    </div>
+    <div class = "buttons">
+        <button class = "button is-success" type = "submit" form = "loginForm">Submit</button>
+        <button class = "button is-danger" type = "reset" form = "loginForm">Cancel</button>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, send_from_directory
+from flask import Flask, redirect, render_template, request, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
 #from sqlalchemy import func as sql_func
 import app.app_config as app_config
@@ -24,6 +24,7 @@ def create_user_from_form(username, password_plaintext, email):
     user.email = email
     db.session.add(user)
     db.session.commit()
+    return user
 
 @app.route("/assets/<path:file_path>")
 def get_asset_file(file_path):
@@ -32,13 +33,16 @@ def get_asset_file(file_path):
 
 @app.route("/")
 def home_page():
-    return "welcome to caydio!"
+    return render_template("index.html")
 
 def ci_username_exists(username):
     # Case-Insensitive check.
     return User.query.filter(User.username.ilike(username)).first()
 def ci_email_exists(email):
     return User.query.filter(User.email.ilike(email)).first()
+
+def add_user_id_to_session(user_id):
+    session["user_id"] = user_id
 
 @app.route("/register/", methods = ["GET", "POST"])
 def register_page():
@@ -51,8 +55,9 @@ def register_page():
         return "Email already exists!"
     if ci_username_exists(username):
         return "Username already exists!"
-    create_user_from_form(username, password_plaintext, email)
-    return "successfully created."
+    user = create_user_from_form(username, password_plaintext, email)
+    add_user_id_to_session(user.id)
+    return redirect("/")
 
 @app.route("/users/<username>/")
 def user_page(username):
@@ -60,3 +65,29 @@ def user_page(username):
     if not viewing_user:
         return "User does not exist!"
     return "User {} registered at {}.".format(viewing_user.username, viewing_user.registered)
+
+@app.route("/logout/")
+def logout():
+    session.pop("user_id", None)
+    return redirect("/")
+
+def user_is_logged_in():
+    return session.get("user_id", -1) != -1
+
+@app.route("/login/", methods = ["GET", "POST"])
+def login_page():
+    if request.method == "GET":
+        if user_is_logged_in():
+            return redirect("/")
+        return render_template("login.html")
+    else:
+        username = request.form["username"]
+        user = User.query.filter(User.username == username).first()
+        if not user:
+            return "username not found."
+        password_plaintext = request.form["password"]
+        hashed_password = user.password
+        if not encryption.verify_password(password_plaintext, hashed_password):
+            return "password is incorrect!"
+        add_user_id_to_session(user.id)
+        return redirect("/")
