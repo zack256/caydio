@@ -61,7 +61,8 @@ def get_asset_file(file_path):
 
 @app.route("/")
 def home_page():
-    return render_template("index.html")
+    user = get_logged_in_user()
+    return render_template("index.html", user = user)
 
 def ci_username_exists(username):
     # Case-Insensitive check.
@@ -126,6 +127,14 @@ def login_page():
         add_user_id_to_session(user.id)
         return redirect("/")
 
+@app.route("/artists/")
+def artists_page():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    artists = Artist.query.filter(Artist.user_id == user.id).order_by(Artist.name).all()
+    return render_template("artists.html", artists = artists)
+
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
     user = get_logged_in_user()
@@ -138,15 +147,16 @@ def artist_page(artist_name):
     videos = Video.query.filter(Video.id.in_(conns)).order_by(Video.name).all()
     return render_template("artist.html", artist = artist, videos = videos)
 
-@app.route("/add-artist/")
-def add_artist():
+@app.route("/forms/add-artist/", methods = ["POST"])
+def add_artist_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    na = request.args.get("na")
+    na = request.form["name"]
     artist = Artist(); artist.name = na; artist.user_id = user.id
     db.session.add(artist); db.session.commit()
-    return redirect("/")
+    return redirect("/artists/{}/".format(artist.name))
+
 @app.route("/add-video/")
 def add_video():
     user = get_logged_in_user()

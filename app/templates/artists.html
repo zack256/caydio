@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block modals %}
+<div class = "modal mft" id = "addArtistModal">
+    <div class="modal-background" onclick = "deactivateModal('addArtistModal');"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Add Artist</p>
+            <button class="delete" aria-label="close" onclick = "deactivateModal('addArtistModal');"></button>
+        </header>
+        <section class="modal-card-body">
+            <form action = "/forms/add-artist/" method = "POST" id = "addArtistForm"></form>
+            <table class = "table is-striped is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td>Name</td>
+                        <td><input name = "name" type = "text" class = "input" maxlength = "255" required = "required" form = "addArtistForm"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <footer class="modal-card-foot">
+            <button class = "button is-success" type = "submit" form = "addArtistForm">Submit</button>
+            <button class = "button is-danger" type = "reset" form = "addArtistForm">Cancel</button>
+        </footer>
+    </div>
+</div>
+{% endblock %}
+{% block body %}
+<h3 class = "title is-3">My Artists</h3>
+<table class = "table is-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Added</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for artist in artists %}
+        <tr>
+            <td><a href = "/artists/{{ artist.name }}/">{{ artist.name }}</a></td>
+            <td>{{ artist.added }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class = "container">
+    <div class = "buttons">
+        <button class = "button is-success" onclick = "activateModal('addArtistModal');">Add Artist</button>
+    </div>
+</div>
+{% endblock %}
