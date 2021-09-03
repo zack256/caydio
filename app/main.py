@@ -16,6 +16,8 @@ class User(db.Model):
     password = db.Column(db.String(255))
     email = db.Column(db.String(255), unique = True)
     registered = db.Column(db.DateTime(), default = db.func.now())
+    artists = db.relationship("Artist", backref = "user")
+    videos = db.relationship("Video", backref = "user")
 
 class Artist(db.Model):
     __tablename__ = "artists"
@@ -23,6 +25,7 @@ class Artist(db.Model):
     name = db.Column(db.String(255))
     added = db.Column(db.DateTime(), default = db.func.now())
     videos = db.relationship("VidConnection")
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
 class Video(db.Model):
     __tablename__ = "videos"
@@ -30,7 +33,8 @@ class Video(db.Model):
     name = db.Column(db.String(255))
     youtube_url = db.Column(db.String(50))
     added = db.Column(db.DateTime(), default = db.func.now())
-    users = db.relationship("VidConnection")
+    artists = db.relationship("VidConnection")
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
 class VidConnection(db.Model):
     __tablename__ = "vid_connections"
@@ -98,10 +102,16 @@ def logout():
 def user_is_logged_in():
     return session.get("user_id", -1) != -1
 
+def get_logged_in_user():
+    user_id = int(session.get("user_id", -1))
+    if user_id == -1:
+        return None
+    return User.query.get(user_id)
+
 @app.route("/login/", methods = ["GET", "POST"])
 def login_page():
     if request.method == "GET":
-        if user_is_logged_in():
+        if get_logged_in_user():
             return redirect("/")
         return render_template("login.html")
     else:
@@ -115,3 +125,47 @@ def login_page():
             return "password is incorrect!"
         add_user_id_to_session(user.id)
         return redirect("/")
+
+@app.route("/artists/<artist_name>/")
+def artist_page(artist_name):
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    artist = Artist.query.filter((Artist.name.ilike(artist_name) & (Artist.user_id == user.id))).first()
+    if not artist:
+        return "Artist not found!"
+    conns = {conn.video_id for conn in artist.videos}
+    videos = Video.query.filter(Video.id.in_(conns)).order_by(Video.name).all()
+    return render_template("artist.html", artist = artist, videos = videos)
+
+@app.route("/add-artist/")
+def add_artist():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    na = request.args.get("na")
+    artist = Artist(); artist.name = na; artist.user_id = user.id
+    db.session.add(artist); db.session.commit()
+    return redirect("/")
+@app.route("/add-video/")
+def add_video():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    na = request.args.get("na"); ur = request.args.get("ur")
+    video = Video(); video.name = na; video.youtube_url = ur; video.user_id = user.id
+    db.session.add(video); db.session.commit()
+    return redirect("/")
+@app.route("/add-conn/")
+def add_conn():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    ar = request.args.get("ar"); vi = request.args.get("vi")
+    conn = VidConnection(); conn.artist_id = int(ar); conn.video_id = int(vi)
+    db.session.add(conn); db.session.commit()
+    return redirect("/")
+@app.route("/refresh")
+def rrr():
+    db.create_all()
+    return "!"
