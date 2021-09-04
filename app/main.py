@@ -135,6 +135,14 @@ def artists_page():
     artists = Artist.query.filter(Artist.user_id == user.id).order_by(Artist.name).all()
     return render_template("artists.html", artists = artists)
 
+@app.route("/videos/")
+def videos_page():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    videos = Video.query.filter(Video.user_id == user.id).order_by(Video.name).all()
+    return render_template("videos.html", videos = videos)
+
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
     user = get_logged_in_user()
@@ -157,15 +165,36 @@ def add_artist_form():
     db.session.add(artist); db.session.commit()
     return redirect("/artists/{}/".format(artist.name))
 
-@app.route("/add-video/")
-def add_video():
+def add_video(na, ur, user_id):
+    video = Video(); video.name = na; video.youtube_url = ur; video.user_id = user_id
+    db.session.add(video); db.session.commit()
+    return video
+
+def add_av_connection(a_id, v_id):
+    conn = VidConnection(); conn.artist_id = a_id; conn.video_id = v_id
+    db.session.add(conn); db.session.commit()
+    return conn
+
+@app.route("/forms/add-video-via-artist/", methods = ["POST"])
+def add_vid_via_artist_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    na = request.args.get("na"); ur = request.args.get("ur")
-    video = Video(); video.name = na; video.youtube_url = ur; video.user_id = user.id
-    db.session.add(video); db.session.commit()
-    return redirect("/")
+    ai = int(request.form["a_id"]); na = request.form.get("name", ""); ur = request.form["yt_url"]
+    video = add_video(na, ur, user.id)
+    add_av_connection(ai, video.id)
+    artist = Artist.query.get(ai)
+    return redirect("/artists/{}/".format(artist.name))
+
+@app.route("/forms/add-video/", methods = ["POST"])
+def add_video_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    na = request.form.get("name", ""); ur = request.form["yt_url"]
+    add_video(na, ur, user.id)
+    return redirect("/videos/")
+
 @app.route("/add-conn/")
 def add_conn():
     user = get_logged_in_user()
