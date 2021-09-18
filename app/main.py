@@ -27,6 +27,13 @@ class Artist(db.Model):
     videos = db.relationship("VidConnection")
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
+    def get_readable_name(self):
+        return self.name.replace("_", " ")
+
+    def set_name(self, given_name):
+        self.name = given_name.replace(" ", "_")
+
+
 class Video(db.Model):
     __tablename__ = "videos"
     id = db.Column(db.Integer, primary_key = True)
@@ -161,7 +168,7 @@ def add_artist_form():
     if not user:
         return "must log in first!"
     na = request.form["name"]
-    artist = Artist(); artist.name = na; artist.user_id = user.id
+    artist = Artist(); artist.set_name(na); artist.user_id = user.id
     db.session.add(artist); db.session.commit()
     return redirect("/artists/{}/".format(artist.name))
 

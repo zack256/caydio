@@ -37,15 +37,14 @@
     <tbody>
         {% for artist in artists %}
         <tr>
-            <td><a href = "/artists/{{ artist.name }}/">{{ artist.name }}</a></td>
+            <td><a href = "/artists/{{ artist.name }}/">{{ artist.get_readable_name() }}</a></td>
             <td>{{ artist.added }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-<div class = "container">
-    <div class = "buttons">
-        <button class = "button is-success" onclick = "activateModal('addArtistModal');">Add Artist</button>
-    </div>
+<div class = "buttons">
+    <button class = "button is-success" onclick = "activateModal('addArtistModal');">Add Artist</button>
 </div>
+<p><a href = "/">Home</a></p>
 {% endblock %}

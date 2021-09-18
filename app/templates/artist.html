@@ -31,7 +31,7 @@
 </div>
 {% endblock %}
 {% block body %}
-<h3 class = "title is-3">{{ artist.name }}</h3>
+<h3 class = "title is-3">{{ artist.get_readable_name() }}</h3>
 <h5 class = "subtitle is-5">Added {{ artist.added }}</h5>
 <table class = "table is-striped">
     <thead>
@@ -49,9 +49,8 @@
         {% endfor %}
     </tbody>
 </table>
-<div class = "container">
-    <div class = "buttons">
-        <button class = "button is-success" onclick = "activateModal('addVideoModal');">Add Video</button>
-    </div>
+<div class = "buttons">
+    <button class = "button is-success" onclick = "activateModal('addVideoModal');">Add Video</button>
 </div>
+<p><a href = "/">Home</a> | <a href = "/artists/">Artists</a></p>
 {% endblock %}
