@@ -35,13 +35,25 @@
     <thead>
         <tr>
             <th>Name</th>
+            <th>Artist</th>
             <th>Added</th>
         </tr>
     </thead>
     <tbody>
-        {% for video in videos %}
+        {# {% for video in videos %} #}
+        {% for i in range(videos|length) %}
+        {% set video = videos[i] %}
         <tr>
             <td>{{ video.name }}</td>
+            <td>
+                <ul class = "artistsList">
+                    {% for j in range(connections[video.id]|length) %}
+                    {% set artist = artists[connections[video.id][j]] %}
+                    <a href = "/artists/{{ artist.name }}/">{{ artist.get_readable_name() }}</a>
+                    {% if j != connections[video.id]|length - 1 %}<span>,&nbsp;</span>{% endif %}
+                    {% endfor %}
+                </ul>
+            </td>
             <td>{{ video.added }}</td>
         </tr>
         {% endfor %}

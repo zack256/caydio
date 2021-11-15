@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 #from sqlalchemy import func as sql_func
 import app.app_config as app_config
 import app.encryption as encryption
+import app.utils as utils
 import os
 
 app = Flask(__name__)
@@ -32,7 +33,6 @@ class Artist(db.Model):
 
     def set_name(self, given_name):
         self.name = given_name.replace(" ", "_")
-
 
 class Video(db.Model):
     __tablename__ = "videos"
@@ -148,7 +148,19 @@ def videos_page():
     if not user:
         return "must log in first!"
     videos = Video.query.filter(Video.user_id == user.id).order_by(Video.name).all()
-    return render_template("videos.html", videos = videos)
+    video_id_set = {video.id for video in videos}
+    connections = VidConnection.query.filter(VidConnection.video_id.in_(video_id_set)).all()
+    connection_set = {vid_con.artist_id for vid_con in connections}
+    artists = Artist.query.filter(Artist.id.in_(connection_set)).all()
+    artist_dict = {artist.id : artist for artist in artists}
+    connection_dict = {}
+    connections.sort(key = lambda x : artist_dict[x.artist_id].name)    # so the artist display list is sorted.
+    for connection in connections:
+        if connection.video_id in connection_dict:
+            connection_dict[connection.video_id].append(connection.artist_id)
+        else:
+            connection_dict[connection.video_id] = [connection.artist_id]
+    return render_template("videos.html", videos = videos, artists = artist_dict, connections = connection_dict, list_artists = utils.comma_list_artists)
 
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
@@ -211,7 +223,9 @@ def add_conn():
     conn = VidConnection(); conn.artist_id = int(ar); conn.video_id = int(vi)
     db.session.add(conn); db.session.commit()
     return redirect("/")
+
 @app.route("/refresh")
 def rrr():
+    # temporary. :)
     db.create_all()
     return "!"
