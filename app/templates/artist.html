@@ -43,7 +43,7 @@
     <tbody>
         {% for video in videos %}
         <tr>
-            <td>{{ video.name }}</td>
+            <td><a href = "/videos/{{video.id }}/">{{ video.name }}</a></td>
             <td>{{ video.added }}</td>
         </tr>
         {% endfor %}

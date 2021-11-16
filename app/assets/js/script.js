@@ -7,3 +7,9 @@ function confirmPasswordsMatch () {
     }
     return match;
 }
+
+function addToDataList (dlID, text) {
+    var optionEl = document.createElement("OPTION");
+    optionEl.value = text;
+    document.getElementById(dlID).appendChild(optionEl);
+}

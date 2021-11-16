@@ -44,7 +44,7 @@
         {% for i in range(videos|length) %}
         {% set video = videos[i] %}
         <tr>
-            <td>{{ video.name }}</td>
+            <td><a href = "/videos/{{video.id }}/">{{ video.name }}</a></td>
             <td>
                 <ul class = "artistsList">
                     {% for j in range(connections[video.id]|length) %}

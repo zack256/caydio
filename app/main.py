@@ -154,13 +154,33 @@ def videos_page():
     artists = Artist.query.filter(Artist.id.in_(connection_set)).all()
     artist_dict = {artist.id : artist for artist in artists}
     connection_dict = {}
-    connections.sort(key = lambda x : artist_dict[x.artist_id].name)    # so the artist display list is sorted.
+    connections.sort(key = lambda x : artist_dict[x.artist_id].name)    # so the artist display list is sorted. maybe want to change.
     for connection in connections:
         if connection.video_id in connection_dict:
             connection_dict[connection.video_id].append(connection.artist_id)
         else:
             connection_dict[connection.video_id] = [connection.artist_id]
     return render_template("videos.html", videos = videos, artists = artist_dict, connections = connection_dict, list_artists = utils.comma_list_artists)
+
+@app.route("/videos/<video_id>/")
+def specific_video_page(video_id):
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    video = Video.query.get(int(video_id))
+    if not video:
+        return "Video not found!"
+    if video.user_id != user.id:
+        return "Can't access this video!"
+    connections = video.artists
+    connections_dict = {connections[i].artist_id : i for i in range(len(connections))}
+    artists = Artist.query.filter(Artist.user_id == user.id).all()
+    notes = []
+    for i in range(len(artists)):
+        if artists[i].id in connections_dict:
+            notes.append((i, connections[connections_dict[artists[i].id]].note))
+    notes.sort(key = lambda x : artists[x[0]].name)             # abc sorted, might change.
+    return render_template("video.html", video = video, notes = notes, artists = artists)
 
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
