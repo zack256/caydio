@@ -8,14 +8,18 @@
             <button class="delete" aria-label="close" onclick = "deactivateModal('addArtistsModal');"></button>
         </header>
         <section class="modal-card-body">
-            <form action = "/forms/add-artist-via-video/" method = "POST" id = "addArtistsForm"></form>
+            <form action = "/forms/connect-to-artist-via-video/" method = "POST" id = "addArtistsForm"></form>
             <datalist id = "artistsList"></datalist>
             <input type = "hidden" name = "v_id" form = "addArtistsForm" value = "{{ video.id }}">
             <table class = "table is-striped is-fullwidth">
                 <tbody>
                     <tr>
                         <td>Artist</td>
-                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addArtistsForm" list = "artistsList"></td>
+                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addArtistsForm" list = "artistsList" required = "required"></td>
+                    </tr>
+                    <tr>
+                        <td>Note</td>
+                        <td><input name = "note" type = "text" class = "input" maxlength = "255" form = "addArtistsForm"></td>
                     </tr>
                 </tbody>
             </table>
@@ -44,7 +48,7 @@
         {% set artist = artists[note[0]] %}
         <tr>
             <td><a href = "/artists/{{ artist.name }}/">{{ artist.get_readable_name() }}</a></td>
-            <td>{{ note[1] }}</td>
+            <td>{% if note[1] %}{{ note[1] }}{% endif %}</td>
         </tr>
         {% endfor %}
     </tbody>

@@ -32,7 +32,8 @@ class Artist(db.Model):
         return self.name.replace("_", " ")
 
     def set_name(self, given_name):
-        self.name = given_name.replace(" ", "_")
+        #self.name = given_name.replace(" ", "_")
+        self.name = utils.artist_db_name(given_name)
 
 class Video(db.Model):
     __tablename__ = "videos"
@@ -209,8 +210,8 @@ def add_video(na, ur, user_id):
     db.session.add(video); db.session.commit()
     return video
 
-def add_av_connection(a_id, v_id):
-    conn = VidConnection(); conn.artist_id = a_id; conn.video_id = v_id
+def add_av_connection(a_id, v_id, note = ""):
+    conn = VidConnection(); conn.artist_id = a_id; conn.video_id = v_id; conn.note = note
     db.session.add(conn); db.session.commit()
     return conn
 
@@ -224,6 +225,19 @@ def add_vid_via_artist_form():
     add_av_connection(ai, video.id)
     artist = Artist.query.get(ai)
     return redirect("/artists/{}/".format(artist.name))
+
+@app.route("/forms/connect-to-artist-via-video/", methods = ["POST"])
+def add_artist_via_vid_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    vi = int(request.form["v_id"]); na = utils.artist_db_name(request.form.get("name")); note = request.form["note"]
+    video = Video.query.get(vi)
+    if video == None:
+        return "video not found!"
+    artist = Artist.query.filter((Artist.user_id == user.id) & (Artist.name == na)).first()     # artist must exist!
+    add_av_connection(artist.id, vi, note)
+    return redirect("/videos/{}/".format(video.id))
 
 @app.route("/forms/add-video/", methods = ["POST"])
 def add_video_form():
