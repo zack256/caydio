@@ -13,3 +13,15 @@ function addToDataList (dlID, text) {
     optionEl.value = text;
     document.getElementById(dlID).appendChild(optionEl);
 }
+
+function confirmDelConn () {
+    var res = confirm("Delete this video?");
+    return res;
+}
+
+function delConn (connID) {
+    if (confirmDelConn()) {
+        document.getElementById("delConnID").value = connID;
+        document.getElementById("delConnBtn").click();
+    }
+}

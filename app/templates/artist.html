@@ -29,6 +29,9 @@
         </footer>
     </div>
 </div>
+<form id = "delConnForm" action = "/forms/delete-connection/" method = "POST"></form>
+<input type = "hidden" form = "delConnForm" name = "connID" id = "delConnID">
+<button style = "display : none;" form = "delConnForm" type = "submit" id = "delConnBtn"></button>
 {% endblock %}
 {% block body %}
 <h3 class = "title is-3">{{ artist.get_readable_name() }}</h3>
@@ -38,13 +41,32 @@
         <tr>
             <th>Name</th>
             <th>Added</th>
+            <th>Note</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        {% for video in videos %}
+        {% for i in range(videos|length) %}
+        {% set video = videos[i] %}
+        {% set conn = conns[i] %}
         <tr>
             <td><a href = "/videos/{{video.id }}/">{{ video.name }}</a></td>
             <td>{{ video.added }}</td>
+            <td>{% if conn.note %}{{ conn.note }}{% endif %}</td>
+            <td>
+                <div class = "buttons">
+                    <button class = "button is-primary">
+                        <span class = "item is-small">
+                            <i class = "fa fa-wrench"></i>
+                        </span>
+                    </button>
+                    <button class = "button is-danger" type = "button" onclick = "delConn({{ conn.id }});">
+                        <span class = "item is-small">
+                            <i class = "fa fa-times"></i>
+                        </span>
+                    </button>
+                </div>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

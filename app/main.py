@@ -191,9 +191,10 @@ def artist_page(artist_name):
     artist = Artist.query.filter((Artist.name.ilike(artist_name) & (Artist.user_id == user.id))).first()
     if not artist:
         return "Artist not found!"
-    conns = {conn.video_id for conn in artist.videos}
+    conns = {conn.video_id : conn for conn in artist.videos}
     videos = Video.query.filter(Video.id.in_(conns)).order_by(Video.name).all()
-    return render_template("artist.html", artist = artist, videos = videos)
+    conns = [conns[video.id] for video in videos]
+    return render_template("artist.html", artist = artist, videos = videos, conns = conns)
 
 @app.route("/forms/add-artist/", methods = ["POST"])
 def add_artist_form():
@@ -211,6 +212,9 @@ def add_video(na, ur, user_id):
     return video
 
 def add_av_connection(a_id, v_id, note = ""):
+    existing = VidConnection.query.filter((VidConnection.artist_id == a_id) & (VidConnection.video_id == v_id)).first()
+    if existing:
+        return None
     conn = VidConnection(); conn.artist_id = a_id; conn.video_id = v_id; conn.note = note
     db.session.add(conn); db.session.commit()
     return conn
@@ -222,7 +226,9 @@ def add_vid_via_artist_form():
         return "must log in first!"
     ai = int(request.form["a_id"]); na = request.form.get("name", ""); ur = request.form["yt_url"]
     video = add_video(na, ur, user.id)
-    add_av_connection(ai, video.id)
+    conn = add_av_connection(ai, video.id)
+    if not conn:
+        return "connection already exists!"
     artist = Artist.query.get(ai)
     return redirect("/artists/{}/".format(artist.name))
 
@@ -236,7 +242,9 @@ def add_artist_via_vid_form():
     if video == None:
         return "video not found!"
     artist = Artist.query.filter((Artist.user_id == user.id) & (Artist.name == na)).first()     # artist must exist!
-    add_av_connection(artist.id, vi, note)
+    conn = add_av_connection(artist.id, vi, note)
+    if not conn:
+        return "connection already exists!"
     return redirect("/videos/{}/".format(video.id))
 
 @app.route("/forms/add-video/", methods = ["POST"])
@@ -247,6 +255,23 @@ def add_video_form():
     na = request.form.get("name", ""); ur = request.form["yt_url"]
     add_video(na, ur, user.id)
     return redirect("/videos/")
+
+@app.route("/forms/delete-connection/", methods = ["POST"])
+def delete_connection_route():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    conn_id = request.form["connID"]
+    #conn = VidConnection.query.get({"vid_connections.id" : conn_id})
+    conn = VidConnection.query.filter(VidConnection.id == conn_id).first()  # hmm...
+    if not conn:
+        return "conn don't exist"
+    video = conn.video
+    if video.user_id != user.id:
+        return "no access to delete conn!"
+    db.session.delete(conn)
+    db.session.commit()
+    return redirect("/videos/{}/".format(video.id))
 
 @app.route("/add-conn/")
 def add_conn():
