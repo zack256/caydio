@@ -15,7 +15,7 @@ function addToDataList (dlID, text) {
 }
 
 function confirmDelConn () {
-    var res = confirm("Delete this video?");
+    var res = confirm("Delete this connection?");
     return res;
 }
 

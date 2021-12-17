@@ -206,6 +206,19 @@ def add_artist_form():
     db.session.add(artist); db.session.commit()
     return redirect("/artists/{}/".format(artist.name))
 
+@app.route("/forms/edit-artist/", methods = ["POST"])
+def edit_artist_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    a = Artist.query.get(request.form["a_id"])
+    if a.user_id != user.id:
+        return "no access to edit this artist!"
+    na = request.form.get("name", "")
+    a.set_name(na)
+    db.session.commit()
+    return redirect("/artists/{}/".format(a.name))
+
 def add_video(na, ur, user_id):
     video = Video(); video.name = na; video.youtube_url = ur; video.user_id = user_id
     db.session.add(video); db.session.commit()
@@ -255,6 +268,19 @@ def add_video_form():
     na = request.form.get("name", ""); ur = request.form["yt_url"]
     add_video(na, ur, user.id)
     return redirect("/videos/")
+
+@app.route("/forms/edit-video/", methods = ["POST"])
+def edit_video_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    v = Video.query.get(request.form["v_id"])
+    if v.user_id != user.id:
+        return "no access to edit this video!"
+    na = request.form.get("name", ""); ur = request.form["yt_url"]
+    v.name = na; v.youtube_url = ur
+    db.session.commit()
+    return redirect("/videos/{}/".format(v.id))
 
 @app.route("/forms/delete-connection/", methods = ["POST"])
 def delete_connection_route():

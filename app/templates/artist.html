@@ -14,7 +14,7 @@
                 <tbody>
                     <tr>
                         <td>Name</td>
-                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addVideoForm"></td>
+                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addVideoForm" required = "required"></td>
                     </tr>
                     <tr>
                         <td>Youtube URL</td>
@@ -26,6 +26,31 @@
         <footer class="modal-card-foot">
             <button class = "button is-success" type = "submit" form = "addVideoForm">Submit</button>
             <button class = "button is-danger" type = "reset" form = "addVideoForm">Cancel</button>
+        </footer>
+    </div>
+</div>
+<div class = "modal mft" id = "editArtistModal">
+    <div class="modal-background" onclick = "deactivateModal('editArtistModal');"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Edit Artist</p>
+            <button class="delete" aria-label="close" onclick = "deactivateModal('editArtistModal');"></button>
+        </header>
+        <section class="modal-card-body">
+            <form action = "/forms/edit-artist/" method = "POST" id = "editArtistForm"></form>
+            <input type = "hidden" name = "a_id" form = "editArtistForm" value = "{{ artist.id }}">
+            <table class = "table is-striped is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td>Name</td>
+                        <td><input name = "name" type = "text" class = "input" maxlength = "255" required = "required" form = "editArtistForm" value = "{{ artist.get_readable_name() }}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <footer class="modal-card-foot">
+            <button class = "button is-success" type = "submit" form = "editArtistForm">Submit</button>
+            <button class = "button is-danger" type = "reset" form = "editArtistForm">Cancel</button>
         </footer>
     </div>
 </div>
@@ -73,6 +98,7 @@
 </table>
 <div class = "buttons">
     <button class = "button is-success" onclick = "activateModal('addVideoModal');">Add Video</button>
+    <button class = "button is-info" onclick = "activateModal('editArtistModal');">Edit Artist</button>
 </div>
 <p><a href = "/">Home</a> | <a href = "/artists/">Artists</a></p>
 {% endblock %}
