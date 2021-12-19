@@ -11,12 +11,36 @@
 		{% block more_top %}{% endblock %}
 	</head>
 	<body>
-		{% block modals %}{% endblock %}
+		{% block modals %}
+		<div id = "modalsDiv"></div>
+		{% endblock %}
+		{% block modal_template %}
+		<div class = "modal mft" id = "modalWrapper">
+			<div class="modal-background" id = "modalBackground"></div>
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title" id = "modalTitle"></p>
+					<button class="delete" aria-label="close" id = "modalClose"></button>
+				</header>
+				<section class="modal-card-body">
+					<form id = "modalForm"></form>
+					<table class = "table is-striped is-fullwidth">
+						<tbody id = "modalTB"></tbody>
+					</table>
+				</section>
+				<footer class="modal-card-foot" id = "modalFooter">
+					<button class = "button is-success" type = "submit">Submit</button>
+					<button class = "button is-danger" type = "reset">Cancel</button>
+				</footer>
+			</div>
+		</div>
+		{% endblock %}
 		<section class = "section">
 		{% block body %}{% endblock %}
 		</section>
 		<script src = "/assets/js/modals.js"></script>
 		<script src = "/assets/js/script.js"></script>
+		<script src = "/assets/js/form_builder.js"></script>
 		<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 		{% block more_bottom %}{% endblock %}
 	</body>
