@@ -237,7 +237,7 @@ def add_vid_via_artist_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    ai = int(request.form["a_id"]); na = request.form.get("name", ""); ur = request.form["yt_url"]
+    ai = int(request.form["artistId"]); na = request.form.get("name", ""); ur = request.form["youtubeUrl"]
     video = add_video(na, ur, user.id)
     conn = add_av_connection(ai, video.id)
     if not conn:
@@ -265,7 +265,7 @@ def add_video_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    na = request.form.get("name", ""); ur = request.form["yt_url"]
+    na = request.form.get("name", ""); ur = request.form["youtubeUrl"]
     add_video(na, ur, user.id)
     return redirect("/videos/")
 

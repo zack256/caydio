@@ -37,30 +37,50 @@ class FormType {
         this.editComponents();
     }
 
+    addTextInput (tbody, inputDets) {
+        var tr, descCol, inpCol, inpName, inpEl;
+        tr = document.createElement("TR");
+        descCol = document.createElement("TD");
+        inpCol = document.createElement("TD");
+        inpEl = document.createElement("INPUT");
+        inpCol.appendChild(inpEl);
+        tr.appendChild(descCol);
+        tr.appendChild(inpCol);
+        tbody.appendChild(tr);
+        inpEl.classList.add("input");
+        inpName = inputDets[1];
+        descCol.innerHTML = inpName;
+        inpEl.setAttribute("name", makeCamelCase(inpName));
+        inpEl.setAttribute("type", "text");
+        inpEl.setAttribute("form", this.gLN("modalForm"));
+        inpEl.setAttribute("maxlength", inputDets[2]);
+        if (inputDets[3]) { // swtich to objs!!
+            inpEl.setAttribute("required", "required");
+        }
+    }
+
+    addHiddenInput (section, inputDets) {
+        var inpEl = document.createElement("INPUT");
+        section.appendChild(inpEl);
+        inpEl.setAttribute("type", "hidden");
+        inpEl.setAttribute("name", makeCamelCase(inputDets[1]));
+        inpEl.setAttribute("form", this.gLN("modalForm"));
+        inpEl.setAttribute("value", inputDets[2]);
+    }
+
     makeModal () {
         let wrapper = document.getElementById("modalWrapper");
         let newWrapper = wrapper.cloneNode(true);
         renameNodeTreeIDs(newWrapper, "_" + this.ccTitle);
         this.attachTo.appendChild(newWrapper);
+        let section = this.gLE("modalSection");
         let tbody = this.gLE("modalTB");
-        var tr, descCol, inpCol, inpName, inpEl;
         for (var i = 0; i < this.inputs.length; i++) {
-            tr = document.createElement("TR");
-            descCol = document.createElement("TD");
-            inpCol = document.createElement("TD");
-            inpEl = document.createElement("INPUT");
-            inpCol.appendChild(inpEl);
-            tr.appendChild(descCol);
-            tr.appendChild(inpCol);
-            tbody.appendChild(tr);
-            inpEl.classList.add("input");
-            inpName = this.inputs[i][0];
-            descCol.innerHTML = inpName;
-            inpEl.setAttribute("name", makeCamelCase(inpName));
-            inpEl.setAttribute("type", "text");
-            inpEl.setAttribute("form", this.gLN("modalForm"));
-            inpEl.setAttribute("maxlength", this.inputs[i][1]);
-            inpEl.setAttribute("required", this.inputs[i][2]);
+            if (this.inputs[i][0] == "text") {
+                this.addTextInput(tbody, this.inputs[i]);
+            } else if (this.inputs[i][0] == "hidden") {
+                this.addHiddenInput(section, this.inputs[i]);
+            }
         }
     }
 
@@ -72,6 +92,10 @@ class FormType {
         return document.getElementById(this.gLN(componentName));
     }
 
+    setDisplayTitle (newTitle) {
+        this.gLE("modalTitle").innerHTML = newTitle;
+    }
+
     editComponents () {
         let form = this.gLE("modalForm");
         form.action = this.postUrl;
@@ -80,10 +104,9 @@ class FormType {
         for (var i = 0; i < footer.children.length; i++) {
             footer.children[i].setAttribute("form", form.id);
         }
-        this.gLE("modalTitle").innerHTML = this.title;
+        this.setDisplayTitle(this.title);
         var self = this;
         this.gLE("modalClose").onclick = function () { deactivateModal(self.gLN("modalWrapper")); };
         this.gLE("modalBackground").onclick = function () { deactivateModal(self.gLN("modalWrapper")); };
     }
-
 }

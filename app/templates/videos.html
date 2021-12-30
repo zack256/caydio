@@ -1,34 +1,4 @@
 {% extends "base.html" %}
-{% block modals %}
-<div class = "modal mft" id = "addVideoModal">
-    <div class="modal-background" onclick = "deactivateModal('addVideoModal');"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Add Video</p>
-            <button class="delete" aria-label="close" onclick = "deactivateModal('addVideoModal');"></button>
-        </header>
-        <section class="modal-card-body">
-            <form action = "/forms/add-video/" method = "POST" id = "addVideoForm"></form>
-            <table class = "table is-striped is-fullwidth">
-                <tbody>
-                    <tr>
-                        <td>Name</td>
-                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addVideoForm" required = "required"></td>
-                    </tr>
-                    <tr>
-                        <td>Youtube URL</td>
-                        <td><input name = "yt_url" type = "text" class = "input" maxlength = "30" required = "required" form = "addVideoForm"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-        <footer class="modal-card-foot">
-            <button class = "button is-success" type = "submit" form = "addVideoForm">Submit</button>
-            <button class = "button is-danger" type = "reset" form = "addVideoForm">Cancel</button>
-        </footer>
-    </div>
-</div>
-{% endblock %}
 {% block body %}
 <h3 class = "title is-3">My Videos</h3>
 <table class = "table is-striped">
@@ -61,7 +31,17 @@
 </table>
 <div class = "container">
     <div class = "buttons">
-        <button class = "button is-success" onclick = "activateModal('addVideoModal');">Add Video</button>
+        <button class = "button is-success" onclick = "activateModal('modalWrapper_addVideo');">Add Video</button>
     </div>
 </div>
+{% endblock %}
+{% block more_bottom %}
+<script>
+    let modalsDiv = document.getElementById("modalsDiv");
+    let addVideosInputs = [
+        ["text", "Name", 255, true],
+        ["text", "Youtube URL", 30, false],
+    ];
+    let addVideosModal = new FormType(modalsDiv, "Add Video", "/forms/add-video/", addVideosInputs);
+</script>
 {% endblock %}

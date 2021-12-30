@@ -25,7 +25,7 @@
 {% block more_bottom %}
 <script>
     let modalsDiv = document.getElementById("modalsDiv");
-    let addArtistInputs = [["Name", 255, "required"]];
+    let addArtistInputs = [["text", "Name", 255, true]];
     let addArtistModal = new FormType(modalsDiv, "Add Artist", "/forms/add-artist/", addArtistInputs);
 </script>
 {% endblock %}
