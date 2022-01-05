@@ -39,8 +39,8 @@
 <script>
     let modalsDiv = document.getElementById("modalsDiv");
     let addVideosInputs = [
-        ["text", "Name", 255, true],
-        ["text", "Youtube URL", 30, false],
+        {type : "text", name : "Name", maxlength : 255, required : true},
+        {type : "text", name : "Youtube URL", maxlength : 30},
     ];
     let addVideosModal = new FormType(modalsDiv, "Add Video", "/forms/add-video/", addVideosInputs);
 </script>

@@ -211,7 +211,7 @@ def edit_artist_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    a = Artist.query.get(request.form["a_id"])
+    a = Artist.query.get(request.form["artistId"])
     if a.user_id != user.id:
         return "no access to edit this artist!"
     na = request.form.get("name", "")

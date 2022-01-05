@@ -25,6 +25,36 @@ function makeCamelCase (s) {
     return newS;
 }
 
+let defaultTextInp = {
+    required : false,
+    maxlength : 255,
+    value : "",
+}
+
+let defaultHiddenInp = {
+    value : "",
+}
+
+let necessaryForTextInp = new Set(["name"]);
+let necessaryForHiddenInp = new Set(["name"]);
+
+function checkIfProvidedAttrsGood (providedObj, nescSet) {
+    for (const e of nescSet) {
+        if (!providedObj.hasOwnProperty(e)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function setFTInputAttrs (providedObj, defaultObj) {
+    for (let key in defaultObj) {
+        if (!providedObj.hasOwnProperty(key)) {
+            providedObj[key] = defaultObj[key];
+        }
+    }
+}
+
 class FormType {
     constructor (attachTo, title, postUrl, inputs) {
         this.title = title;
@@ -37,8 +67,13 @@ class FormType {
         this.editComponents();
     }
 
-    addTextInput (tbody, inputDets) {
-        var tr, descCol, inpCol, inpName, inpEl;
+    addTextInput (tbody, inputObj) {
+
+        if (!checkIfProvidedAttrsGood(inputObj, necessaryForTextInp)) {
+            return; // error!
+        }
+
+        var tr, descCol, inpCol, inpEl;
         tr = document.createElement("TR");
         descCol = document.createElement("TD");
         inpCol = document.createElement("TD");
@@ -48,24 +83,33 @@ class FormType {
         tr.appendChild(inpCol);
         tbody.appendChild(tr);
         inpEl.classList.add("input");
-        inpName = inputDets[1];
-        descCol.innerHTML = inpName;
-        inpEl.setAttribute("name", makeCamelCase(inpName));
+
+        setFTInputAttrs(inputObj, defaultTextInp);
+
+        descCol.innerHTML = inputObj.name;
+        inpEl.setAttribute("name", makeCamelCase(inputObj.name));
         inpEl.setAttribute("type", "text");
         inpEl.setAttribute("form", this.gLN("modalForm"));
-        inpEl.setAttribute("maxlength", inputDets[2]);
-        if (inputDets[3]) { // swtich to objs!!
+        inpEl.setAttribute("maxlength", inputObj.maxlength);
+        if (inputObj.required) {
             inpEl.setAttribute("required", "required");
         }
+        inpEl.setAttribute("value", inputObj.value);
+
     }
 
-    addHiddenInput (section, inputDets) {
+    addHiddenInput (section, inputObj) {
+
+        if (!checkIfProvidedAttrsGood(inputObj, necessaryForHiddenInp)) {
+            return; // error!
+        }
+        setFTInputAttrs(inputObj, defaultHiddenInp);
         var inpEl = document.createElement("INPUT");
         section.appendChild(inpEl);
         inpEl.setAttribute("type", "hidden");
-        inpEl.setAttribute("name", makeCamelCase(inputDets[1]));
+        inpEl.setAttribute("name", makeCamelCase(inputObj.name));
         inpEl.setAttribute("form", this.gLN("modalForm"));
-        inpEl.setAttribute("value", inputDets[2]);
+        inpEl.setAttribute("value", inputObj.value);
     }
 
     makeModal () {
@@ -76,9 +120,12 @@ class FormType {
         let section = this.gLE("modalSection");
         let tbody = this.gLE("modalTB");
         for (var i = 0; i < this.inputs.length; i++) {
-            if (this.inputs[i][0] == "text") {
+            if (!this.inputs[i].hasOwnProperty("type")) {
+                continue;   // error!!
+            }
+            if (this.inputs[i].type == "text") {
                 this.addTextInput(tbody, this.inputs[i]);
-            } else if (this.inputs[i][0] == "hidden") {
+            } else if (this.inputs[i].type == "hidden") {
                 this.addHiddenInput(section, this.inputs[i]);
             }
         }
