@@ -203,6 +203,8 @@ def add_artist_form():
         return "must log in first!"
     na = request.form["name"]
     artist = Artist(); artist.set_name(na); artist.user_id = user.id
+    if Artist.query.filter((Artist.user_id == user.id) & (Artist.name == na)).first():
+        return "artist with same name already exists!"
     db.session.add(artist); db.session.commit()
     return redirect("/artists/{}/".format(artist.name))
 
@@ -250,7 +252,7 @@ def add_artist_via_vid_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    vi = int(request.form["v_id"]); na = utils.artist_db_name(request.form.get("name")); note = request.form["note"]
+    vi = int(request.form["videoId"]); na = utils.artist_db_name(request.form.get("name")); note = request.form["note"]
     video = Video.query.get(vi)
     if video == None:
         return "video not found!"
@@ -274,10 +276,10 @@ def edit_video_form():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    v = Video.query.get(request.form["v_id"])
+    v = Video.query.get(request.form["videoId"])
     if v.user_id != user.id:
         return "no access to edit this video!"
-    na = request.form.get("name", ""); ur = request.form["yt_url"]
+    na = request.form.get("name", ""); ur = request.form["youtubeUrl"]
     v.name = na; v.youtube_url = ur
     db.session.commit()
     return redirect("/videos/{}/".format(v.id))

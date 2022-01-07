@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{#
 <form id = "delConnForm" action = "/forms/delete-connection/" method = "POST"></form>
 <input type = "hidden" form = "delConnForm" name = "connID" id = "delConnID">
 <button style = "display : none;" form = "delConnForm" type = "submit" id = "delConnBtn"></button>
+#}
 {% block body %}
 <h3 class = "title is-3">{{ artist.get_readable_name() }}</h3>
 <h5 class = "subtitle is-5">Added {{ artist.added }}</h5>
@@ -54,13 +56,13 @@
         {type : "text", name : "Youtube URL", maxlength : 30},
         {type : "hidden", name : "Artist ID", value : "{{ artist.id }}"},
     ];
-    let addVideoModal = new FormType(modalsDiv, "Add Video", "/forms/add-video-via-artist/", addVideoInputs);
+    let addVideoModal = new FormType(modalsDiv, "Add Video", addVideoInputs, {postUrl : "/forms/add-video-via-artist/", confirmMsg : "Are you sure you want to add this video?"});
     addVideoModal.setDisplayTitle("{{ artist.get_readable_name() }} - Add Video");
     let editArtistInputs = [
         {type : "hidden", name : "Artist ID", value : "{{ artist.id }}"},
         {type : "text", name : "Name", maxlength : 255, required : true, value : "{{ artist.get_readable_name() }}"},
     ];
-    let editArtistModal = new FormType(modalsDiv, "Edit Artist", "/forms/edit-artist/", editArtistInputs);
+    let editArtistModal = new FormType(modalsDiv, "Edit Artist", editArtistInputs, {postUrl : "/forms/edit-artist/", confirmMsg : "Are you sure you want to edit this artist?"});
 
 </script>
 {% endblock %}

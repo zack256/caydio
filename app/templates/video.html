@@ -1,65 +1,4 @@
 {% extends "base.html" %}
-{% block modals %}
-<div class = "modal mft" id = "addArtistsModal">
-    <div class="modal-background" onclick = "deactivateModal('addArtistsModal');"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">{{ video.name }} - Add Artists</p>
-            <button class="delete" aria-label="close" onclick = "deactivateModal('addArtistsModal');"></button>
-        </header>
-        <section class="modal-card-body">
-            <form action = "/forms/connect-to-artist-via-video/" method = "POST" id = "addArtistsForm"></form>
-            <datalist id = "artistsList"></datalist>
-            <input type = "hidden" name = "v_id" form = "addArtistsForm" value = "{{ video.id }}">
-            <table class = "table is-striped is-fullwidth">
-                <tbody>
-                    <tr>
-                        <td>Artist</td>
-                        <td><input name = "name" type = "text" class = "input" maxlength = "255" form = "addArtistsForm" list = "artistsList" required = "required"></td>
-                    </tr>
-                    <tr>
-                        <td>Note</td>
-                        <td><input name = "note" type = "text" class = "input" maxlength = "255" form = "addArtistsForm"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-        <footer class="modal-card-foot">
-            <button class = "button is-success" type = "submit" form = "addArtistsForm">Submit</button>
-            <button class = "button is-danger" type = "reset" form = "addArtistsForm">Cancel</button>
-        </footer>
-    </div>
-</div>
-<div class = "modal mft" id = "editVideoModal">
-    <div class="modal-background" onclick = "deactivateModal('editVideoModal');"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">{{ video.name }} - Edit</p>
-            <button class="delete" aria-label="close" onclick = "deactivateModal('editVideoModal');"></button>
-        </header>
-        <section class="modal-card-body">
-            <form action = "/forms/edit-video/" method = "POST" id = "editVideoForm"></form>
-            <input type = "hidden" name = "v_id" form = "editVideoForm" value = "{{ video.id }}">
-            <table class = "table is-striped is-fullwidth">
-                <tbody>
-                    <tr>
-                        <td>Name</td>
-                        <td><input name = "name" type = "text" class = "input" maxlength = "255" required = "required" form = "editVideoForm" value = "{{ video.name }}"></td>
-                    </tr>
-                    <tr>
-                        <td>Youtube URL</td>
-                        <td><input name = "yt_url" type = "text" class = "input" maxlength = "30" required = "required" form = "editVideoForm" value = "{{ video.youtube_url }}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-        <footer class="modal-card-foot">
-            <button class = "button is-success" type = "submit" form = "editVideoForm">Submit</button>
-            <button class = "button is-danger" type = "reset" form = "editVideoForm">Cancel</button>
-        </footer>
-    </div>
-</div>
-{% endblock %}
 {% block body %}
 <h3 class = "title is-3">{{ video.name }}</h3>
 <h5 class = "subtitle is-5">Added {{ video.added }}</h5>
@@ -82,13 +21,30 @@
         {% endfor %}
     </tbody>
 </table>
+<datalist id = "artistsList"></datalist>
 <div class = "buttons">
-    <button class = "button is-success" onclick = "activateModal('addArtistsModal');">Add Artist</button>
-    <button class = "button is-info" onclick = "activateModal('editVideoModal');">Edit Video</button>
+    <button class = "button is-success" onclick = "activateModal('modalWrapper_connectArtist');">Add Artist</button>
+    <button class = "button is-info" onclick = "activateModal('modalWrapper_editVideo');">Edit Video</button>
 </div>
 <p><a href = "/">Home</a> | <a href = "/videos/">Videos</a></p>
 {% endblock %}
 {% block more_bottom %}
+<script>
+    let modalsDiv = document.getElementById("modalsDiv");
+    let connArtistInputs = [
+        {type : "hidden", name : "Video ID", value : "{{ video.id }}"},
+        {type : "text", name : "Name", maxlength : 255, required : true, list : "artistsList"},
+        {type : "text", name : "Note", maxlength : 255},
+    ];
+    let connArtistModal = new FormType(modalsDiv, "Connect Artist", connArtistInputs, {postUrl : "/forms/connect-to-artist-via-video/", confirmMsg : "Are you sure you want to connect this artist?"});
+    connArtistModal.setDisplayTitle("{{ video.name }} - Connect Artist");
+    let editVideoInputs = [
+        {type : "hidden", name : "Video ID", value : "{{ video.id }}"},
+        {type : "text", name : "Name", maxlength : 255, required : true, value : "{{ video.name }}"},
+        {type : "text", name : "Youtube URL", maxlength : 30, value : "{{ video.youtube_url }}"},
+    ];
+    let editVideoModal = new FormType(modalsDiv, "Edit Video", editVideoInputs, {postUrl : "/forms/edit-video/", confirmMsg : "Are you sure you want to edit this video?"});
+</script>
 <script>
 {% for artist in artists %}
 addToDataList("artistsList", "{{ artist.get_readable_name() }}");

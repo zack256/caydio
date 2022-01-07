@@ -28,6 +28,6 @@
     let addArtistInputs = [
         {type : "text", name : "Name", maxlength : 255, required : true},
     ];
-    let addArtistModal = new FormType(modalsDiv, "Add Artist", "/forms/add-artist/", addArtistInputs);
+    let addArtistModal = new FormType(modalsDiv, "Add Artist", addArtistInputs, {postUrl : "/forms/add-artist/", confirmMsg : "Are you sure you want to add this artist?"});
 </script>
 {% endblock %}

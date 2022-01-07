@@ -28,7 +28,8 @@ function makeCamelCase (s) {
 let defaultTextInp = {
     required : false,
     maxlength : 255,
-    value : "",
+    value : null,
+    list : null,
 }
 
 let defaultHiddenInp = {
@@ -56,11 +57,11 @@ function setFTInputAttrs (providedObj, defaultObj) {
 }
 
 class FormType {
-    constructor (attachTo, title, postUrl, inputs) {
+    constructor (attachTo, title, inputs, formDataObj) {
         this.title = title;
         //this.camelCaseTitle();
         this.ccTitle = makeCamelCase(this.title);
-        this.postUrl = postUrl;
+        this.formDataObj = formDataObj;
         this.attachTo = attachTo;
         this.inputs = inputs;
         this.makeModal();
@@ -94,8 +95,12 @@ class FormType {
         if (inputObj.required) {
             inpEl.setAttribute("required", "required");
         }
-        inpEl.setAttribute("value", inputObj.value);
-
+        if (inputObj.value) {
+            inpEl.setAttribute("value", inputObj.value);
+        }
+        if (inputObj.list) {
+            inpEl.setAttribute("list", inputObj.list);
+        }
     }
 
     addHiddenInput (section, inputObj) {
@@ -144,15 +149,18 @@ class FormType {
     }
 
     editComponents () {
+        var self = this;
         let form = this.gLE("modalForm");
-        form.action = this.postUrl;
+        form.action = this.formDataObj.postUrl;
         form.method = "POST";
+        if (this.formDataObj.hasOwnProperty("confirmMsg")) {
+            form.onsubmit = function () { return confirm(self.formDataObj.confirmMsg); };
+        }
         let footer = this.gLE("modalFooter");
         for (var i = 0; i < footer.children.length; i++) {
             footer.children[i].setAttribute("form", form.id);
         }
         this.setDisplayTitle(this.title);
-        var self = this;
         this.gLE("modalClose").onclick = function () { deactivateModal(self.gLN("modalWrapper")); };
         this.gLE("modalBackground").onclick = function () { deactivateModal(self.gLN("modalWrapper")); };
     }

@@ -34,6 +34,7 @@
         <button class = "button is-success" onclick = "activateModal('modalWrapper_addVideo');">Add Video</button>
     </div>
 </div>
+<p><a href = "/">Home</a></p>
 {% endblock %}
 {% block more_bottom %}
 <script>
@@ -42,6 +43,6 @@
         {type : "text", name : "Name", maxlength : 255, required : true},
         {type : "text", name : "Youtube URL", maxlength : 30},
     ];
-    let addVideosModal = new FormType(modalsDiv, "Add Video", "/forms/add-video/", addVideosInputs);
+    let addVideosModal = new FormType(modalsDiv, "Add Video", addVideosInputs, {postUrl : "/forms/add-video/", confirmMsg : "Are you sure you want to add this video?"});
 </script>
 {% endblock %}
