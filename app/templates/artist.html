@@ -63,6 +63,5 @@
         {type : "text", name : "Name", maxlength : 255, required : true, value : "{{ artist.get_readable_name() }}"},
     ];
     let editArtistModal = new FormType(modalsDiv, "Edit Artist", editArtistInputs, {postUrl : "/forms/edit-artist/", confirmMsg : "Are you sure you want to edit this artist?"});
-
 </script>
 {% endblock %}

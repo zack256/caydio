@@ -19,6 +19,7 @@ class User(db.Model):
     registered = db.Column(db.DateTime(), default = db.func.now())
     artists = db.relationship("Artist", backref = "user")
     videos = db.relationship("Video", backref = "user")
+    a_tags = db.relationship("ArtistTag", backref = "user")
 
 class Artist(db.Model):
     __tablename__ = "artists"
@@ -26,6 +27,7 @@ class Artist(db.Model):
     name = db.Column(db.String(255))
     added = db.Column(db.DateTime(), default = db.func.now())
     videos = db.relationship("VidConnection")
+    a_tags = db.relationship("ATConn")
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
     def get_readable_name(self):
@@ -52,6 +54,22 @@ class VidConnection(db.Model):
     artist = db.relationship(Artist, backref = "artists_c")
     video = db.relationship(Video, backref = "videos_c")
     note = db.Column(db.String(255))
+
+class ArtistTag(db.Model):
+    __tablename__ = "artist_tags"
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(50))
+    description = db.Column(db.String(255))
+    a_tags = db.relationship("ATConn")
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
+
+class ATConn(db.Model):
+    __tablename__ = "at_connections"
+    id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    artist_id = db.Column(db.Integer(), db.ForeignKey("artists.id"), primary_key = True, autoincrement = False)
+    tag_id = db.Column(db.Integer(), db.ForeignKey("artist_tags.id"), primary_key = True, autoincrement = False)
+    artist = db.relationship(Artist, backref = "artists_t")
+    tag = db.relationship(ArtistTag, backref = "tags_t")
 
 def create_user_from_form(username, password_plaintext, email):
     user = User()
@@ -310,6 +328,40 @@ def add_conn():
     conn = VidConnection(); conn.artist_id = int(ar); conn.video_id = int(vi)
     db.session.add(conn); db.session.commit()
     return redirect("/")
+
+@app.route("/tags/")
+def tags_pg():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    tags = sorted(user.a_tags, key = lambda x : x.name)
+    return render_template("tags.html", tags = tags)
+
+@app.route("/tags/<tag_name>/")
+def tag_pg(tag_name):
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    tag = ArtistTag.query.filter((ArtistTag.user_id == user.id) & (ArtistTag.name == tag_name)).first()
+    if not tag:
+        return "tag doesn't exist!"
+    return render_template("tag.html", tag = tag)
+
+@app.route("/forms/add-tag/", methods = ["POST"])
+def add_tag_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    na = request.form["name"]; de = request.form["description"]
+    name = utils.format_tag_name(na)
+    if name == "":
+        return "tag name invalid!"
+    if ArtistTag.query.filter((ArtistTag.user_id == user.id) & (ArtistTag.name == name)).first():
+        return "tag name already taken!"
+    at = ArtistTag(name = name, description = de)
+    at.user_id = user.id
+    db.session.add(at); db.session.commit()
+    return redirect("/tags/{}/".format(name))
 
 @app.route("/refresh")
 def rrr():
