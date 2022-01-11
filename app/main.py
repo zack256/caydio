@@ -19,7 +19,7 @@ class User(db.Model):
     registered = db.Column(db.DateTime(), default = db.func.now())
     artists = db.relationship("Artist", backref = "user")
     videos = db.relationship("Video", backref = "user")
-    a_tags = db.relationship("ArtistTag", backref = "user")
+    v_tags = db.relationship("VideoTag", backref = "user")
 
 class Artist(db.Model):
     __tablename__ = "artists"
@@ -27,7 +27,6 @@ class Artist(db.Model):
     name = db.Column(db.String(255))
     added = db.Column(db.DateTime(), default = db.func.now())
     videos = db.relationship("VidConnection")
-    a_tags = db.relationship("ATConn")
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
     def get_readable_name(self):
@@ -44,6 +43,7 @@ class Video(db.Model):
     youtube_url = db.Column(db.String(50))
     added = db.Column(db.DateTime(), default = db.func.now())
     artists = db.relationship("VidConnection")
+    v_tags = db.relationship("VTConn")
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
 
 class VidConnection(db.Model):
@@ -55,21 +55,21 @@ class VidConnection(db.Model):
     video = db.relationship(Video, backref = "videos_c")
     note = db.Column(db.String(255))
 
-class ArtistTag(db.Model):
-    __tablename__ = "artist_tags"
+class VideoTag(db.Model):
+    __tablename__ = "video_tags"
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(255))
-    a_tags = db.relationship("ATConn")
+    v_tags = db.relationship("VTConn")
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
 
-class ATConn(db.Model):
-    __tablename__ = "at_connections"
+class VTConn(db.Model):
+    __tablename__ = "vt_connections"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    artist_id = db.Column(db.Integer(), db.ForeignKey("artists.id"), primary_key = True, autoincrement = False)
-    tag_id = db.Column(db.Integer(), db.ForeignKey("artist_tags.id"), primary_key = True, autoincrement = False)
-    artist = db.relationship(Artist, backref = "artists_t")
-    tag = db.relationship(ArtistTag, backref = "tags_t")
+    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id"), primary_key = True, autoincrement = False)
+    tag_id = db.Column(db.Integer(), db.ForeignKey("video_tags.id"), primary_key = True, autoincrement = False)
+    video = db.relationship(Video, backref = "videos_t")
+    tag = db.relationship(VideoTag, backref = "tags_t")
 
 def create_user_from_form(username, password_plaintext, email):
     user = User()
@@ -199,7 +199,8 @@ def specific_video_page(video_id):
         if artists[i].id in connections_dict:
             notes.append((i, connections[connections_dict[artists[i].id]].note))
     notes.sort(key = lambda x : artists[x[0]].name)             # abc sorted, might change.
-    return render_template("video.html", video = video, notes = notes, artists = artists)
+    tags = user.v_tags
+    return render_template("video.html", video = video, notes = notes, artists = artists, tags = tags)
 
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
@@ -334,7 +335,7 @@ def tags_pg():
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    tags = sorted(user.a_tags, key = lambda x : x.name)
+    tags = sorted(user.v_tags, key = lambda x : x.name)
     return render_template("tags.html", tags = tags)
 
 @app.route("/tags/<tag_name>/")
@@ -342,7 +343,7 @@ def tag_pg(tag_name):
     user = get_logged_in_user()
     if not user:
         return "must log in first!"
-    tag = ArtistTag.query.filter((ArtistTag.user_id == user.id) & (ArtistTag.name == tag_name)).first()
+    tag = VideoTag.query.filter((VideoTag.user_id == user.id) & (VideoTag.name == tag_name)).first()
     if not tag:
         return "tag doesn't exist!"
     return render_template("tag.html", tag = tag)
@@ -356,12 +357,31 @@ def add_tag_form():
     name = utils.format_tag_name(na)
     if name == "":
         return "tag name invalid!"
-    if ArtistTag.query.filter((ArtistTag.user_id == user.id) & (ArtistTag.name == name)).first():
+    if VideoTag.query.filter((VideoTag.user_id == user.id) & (VideoTag.name == name)).first():
         return "tag name already taken!"
-    at = ArtistTag(name = name, description = de)
-    at.user_id = user.id
-    db.session.add(at); db.session.commit()
+    vt = VideoTag(name = name, description = de)
+    vt.user_id = user.id
+    db.session.add(vt); db.session.commit()
     return redirect("/tags/{}/".format(name))
+
+@app.route("/forms/add-vtag-via-vid/", methods = ["POST"])
+def add_vtag_via_vid_form():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    vi = int(request.form["videoId"]); na = request.form.get("tag")
+    video = Video.query.get(vi)
+    if video == None or video.user_id != user.id:
+        return "video not found!"
+    v_tag = VideoTag.query.filter((VideoTag.user_id == user.id) & (VideoTag.name == na)).first()
+    if not v_tag:
+        return "tag doesn't exist!"
+    conn = VTConn.query.filter((VTConn.video_id == video.id) & (VTConn.tag_id == v_tag.id)).first()
+    if conn:
+        return "connection already exists!"
+    conn = VTConn(video_id = video.id, tag_id = v_tag.id)
+    db.session.add(conn); db.session.commit()
+    return redirect("/videos/{}/".format(video.id))
 
 @app.route("/refresh")
 def rrr():

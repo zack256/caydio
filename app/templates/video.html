@@ -22,9 +22,11 @@
     </tbody>
 </table>
 <datalist id = "artistsList"></datalist>
+<datalist id = "tagsList"></datalist>
 <div class = "buttons">
     <button class = "button is-success" onclick = "activateModal('modalWrapper_connectArtist');">Add Artist</button>
     <button class = "button is-info" onclick = "activateModal('modalWrapper_editVideo');">Edit Video</button>
+    <button class = "button is-link" onclick = "activateModal('modalWrapper_addTag');">Add Tag</button>
 </div>
 <p><a href = "/">Home</a> | <a href = "/videos/">Videos</a></p>
 {% endblock %}
@@ -44,10 +46,18 @@
         {type : "text", name : "Youtube URL", maxlength : 30, value : "{{ video.youtube_url }}"},
     ];
     let editVideoModal = new FormType(modalsDiv, "Edit Video", editVideoInputs, {postUrl : "/forms/edit-video/", confirmMsg : "Are you sure you want to edit this video?"});
+    let addVTagModalInps = [
+        {type : "hidden", name : "Video ID", value : "{{ video.id }}"},
+        {type : "text", name : "Tag", required : true, list : "tagsList"},
+    ];
+    let addVTagModal = new FormType(modalsDiv, "Add Tag", addVTagModalInps, {postUrl : "/forms/add-vtag-via-vid/", confirmMsg : "Are you sure you want to add this tag?"});
 </script>
 <script>
 {% for artist in artists %}
 addToDataList("artistsList", "{{ artist.get_readable_name() }}");
+{% endfor %}
+{% for tag in tags %}
+addToDataList("tagsList", "{{ tag.name }}");
 {% endfor %}
 </script>
 {% endblock %}
