@@ -1,9 +1,10 @@
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
-#from sqlalchemy import func as sql_func
+from sqlalchemy import func as sql_func
 import app.app_config as app_config
 import app.encryption as encryption
 import app.utils as utils
+import app.constants as constants
 import os
 
 app = Flask(__name__)
@@ -85,10 +86,37 @@ def get_asset_file(file_path):
     path = os.path.join(os.path.dirname(__file__), "assets")
     return send_from_directory(path, file_path, as_attachment = True)
 
+def get_random_sample_of_artists(user, n):
+    artists = Artist.query.filter(Artist.user_id == user.id).order_by(sql_func.random()).limit(n).all()
+    #artists.sort(key=lambda x: x.name)
+    return artists
+
+def get_random_sample_of_videos(user, n):
+    videos = Video.query.filter(Video.user_id == user.id).order_by(sql_func.random()).limit(n).all()
+    #videos.sort(key=lambda x: x.name)
+    return videos
+
+def send_videos_to_display(videos):
+    video_id_set = {video.id for video in videos}
+    connections = VidConnection.query.filter(VidConnection.video_id.in_(video_id_set)).all()
+    connection_set = {vid_con.artist_id for vid_con in connections}
+    artists = Artist.query.filter(Artist.id.in_(connection_set)).all()
+    artist_dict = {artist.id : artist for artist in artists}
+    connection_dict = {}
+    connections.sort(key = lambda x : artist_dict[x.artist_id].name)    # so the artist display list is sorted. maybe want to change.
+    for connection in connections:
+        if connection.video_id in connection_dict:
+            connection_dict[connection.video_id].append(connection.artist_id)
+        else:
+            connection_dict[connection.video_id] = [connection.artist_id]
+    return videos, artist_dict, connection_dict
+
 @app.route("/")
 def home_page():
     user = get_logged_in_user()
-    return render_template("index.html", user = user)
+    videos = get_random_sample_of_videos(user, constants.NUM_SAMPLE_VIDEOS)
+    videos, artist_dict, connection_dict = send_videos_to_display(videos)
+    return render_template("index.html", user=user, videos=videos, artists=artist_dict, connections=connection_dict, list_artists=utils.comma_list_artists)
 
 def ci_username_exists(username):
     # Case-Insensitive check.
@@ -167,19 +195,8 @@ def videos_page():
     if not user:
         return "must log in first!"
     videos = Video.query.filter(Video.user_id == user.id).order_by(Video.name).all()
-    video_id_set = {video.id for video in videos}
-    connections = VidConnection.query.filter(VidConnection.video_id.in_(video_id_set)).all()
-    connection_set = {vid_con.artist_id for vid_con in connections}
-    artists = Artist.query.filter(Artist.id.in_(connection_set)).all()
-    artist_dict = {artist.id : artist for artist in artists}
-    connection_dict = {}
-    connections.sort(key = lambda x : artist_dict[x.artist_id].name)    # so the artist display list is sorted. maybe want to change.
-    for connection in connections:
-        if connection.video_id in connection_dict:
-            connection_dict[connection.video_id].append(connection.artist_id)
-        else:
-            connection_dict[connection.video_id] = [connection.artist_id]
-    return render_template("videos.html", videos = videos, artists = artist_dict, connections = connection_dict, list_artists = utils.comma_list_artists)
+    videos, artist_dict, connection_dict = send_videos_to_display(videos)
+    return render_template("videos.html", videos = videos, artists = artist_dict, connections = connection_dict)
 
 @app.route("/videos/<video_id>/")
 def specific_video_page(video_id):
@@ -191,16 +208,18 @@ def specific_video_page(video_id):
         return "Video not found!"
     if video.user_id != user.id:
         return "Can't access this video!"
-    connections = video.artists
-    connections_dict = {connections[i].artist_id : i for i in range(len(connections))}
+    a_connections = video.artists
+    connections_dict = {a_connections[i].artist_id : i for i in range(len(a_connections))}
     artists = Artist.query.filter(Artist.user_id == user.id).all()
     notes = []
     for i in range(len(artists)):
         if artists[i].id in connections_dict:
-            notes.append((i, connections[connections_dict[artists[i].id]].note))
+            notes.append((i, a_connections[connections_dict[artists[i].id]].note))
     notes.sort(key = lambda x : artists[x[0]].name)             # abc sorted, might change.
-    tags = user.v_tags
-    return render_template("video.html", video = video, notes = notes, artists = artists, tags = tags)
+    all_tags = VideoTag.query.order_by(VideoTag.name).all()
+    t_connections = {vt.tag_id for vt in video.v_tags}
+    specific_tags = VideoTag.query.filter(VideoTag.id.in_(t_connections)).order_by(VideoTag.name).all()
+    return render_template("video.html", video = video, notes = notes, artists = artists, tags = all_tags, specific_tags = specific_tags)
 
 @app.route("/artists/<artist_name>/")
 def artist_page(artist_name):
@@ -214,6 +233,27 @@ def artist_page(artist_name):
     videos = Video.query.filter(Video.id.in_(conns)).order_by(Video.name).all()
     conns = [conns[video.id] for video in videos]
     return render_template("artist.html", artist = artist, videos = videos, conns = conns)
+
+@app.route("/tags/")
+def tags_pg():
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    tags = sorted(user.v_tags, key = lambda x : x.name)
+    return render_template("tags.html", tags = tags)
+
+@app.route("/tags/<tag_name>/")
+def tag_pg(tag_name):
+    user = get_logged_in_user()
+    if not user:
+        return "must log in first!"
+    tag = VideoTag.query.filter((VideoTag.user_id == user.id) & (VideoTag.name == tag_name)).first()
+    if not tag:
+        return "tag doesn't exist!"
+    conns = {conn.video_id: conn for conn in tag.v_tags}
+    videos = Video.query.filter(Video.id.in_(conns)).order_by(Video.name).all()
+    videos, artist_dict, connection_dict = send_videos_to_display(videos)
+    return render_template("tag.html", tag = tag, videos = videos, artists = artist_dict, connections = connection_dict)
 
 @app.route("/forms/add-artist/", methods = ["POST"])
 def add_artist_form():
@@ -329,24 +369,6 @@ def add_conn():
     conn = VidConnection(); conn.artist_id = int(ar); conn.video_id = int(vi)
     db.session.add(conn); db.session.commit()
     return redirect("/")
-
-@app.route("/tags/")
-def tags_pg():
-    user = get_logged_in_user()
-    if not user:
-        return "must log in first!"
-    tags = sorted(user.v_tags, key = lambda x : x.name)
-    return render_template("tags.html", tags = tags)
-
-@app.route("/tags/<tag_name>/")
-def tag_pg(tag_name):
-    user = get_logged_in_user()
-    if not user:
-        return "must log in first!"
-    tag = VideoTag.query.filter((VideoTag.user_id == user.id) & (VideoTag.name == tag_name)).first()
-    if not tag:
-        return "tag doesn't exist!"
-    return render_template("tag.html", tag = tag)
 
 @app.route("/forms/add-tag/", methods = ["POST"])
 def add_tag_form():
