@@ -5,7 +5,7 @@
 <p><a href = "https://www.youtube.com/watch/?v={{ video.youtube_url }}" target = "_blank">View on Youtube</a></p>
 <p>
     {% for i in range(specific_tags|length) %}
-    <a href = "/tags/{{ tags[i].name }}/">{{ specific_tags[i].name }}</a>{% if i != specific_tags|length - 1 %},{% endif %}
+    <a href = "/tags/{{ specific_tags[i].name }}/">{{ specific_tags[i].name }}</a>{% if i != specific_tags|length - 1 %},{% endif %}
     {% endfor %}
 </p>
 <h5 class = "subtitle is-5">Artists</h5>

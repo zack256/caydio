@@ -34,7 +34,6 @@ class Artist(db.Model):
         return self.name.replace("_", " ")
 
     def set_name(self, given_name):
-        #self.name = given_name.replace(" ", "_")
         self.name = utils.artist_db_name(given_name)
 
 class Video(db.Model):
@@ -88,12 +87,10 @@ def get_asset_file(file_path):
 
 def get_random_sample_of_artists(user, n):
     artists = Artist.query.filter(Artist.user_id == user.id).order_by(sql_func.random()).limit(n).all()
-    #artists.sort(key=lambda x: x.name)
     return artists
 
 def get_random_sample_of_videos(user, n):
     videos = Video.query.filter(Video.user_id == user.id).order_by(sql_func.random()).limit(n).all()
-    #videos.sort(key=lambda x: x.name)
     return videos
 
 def send_videos_to_display(videos):
@@ -114,9 +111,11 @@ def send_videos_to_display(videos):
 @app.route("/")
 def home_page():
     user = get_logged_in_user()
-    videos = get_random_sample_of_videos(user, constants.NUM_SAMPLE_VIDEOS)
-    videos, artist_dict, connection_dict = send_videos_to_display(videos)
-    return render_template("index.html", user=user, videos=videos, artists=artist_dict, connections=connection_dict, list_artists=utils.comma_list_artists)
+    if user:
+        videos = get_random_sample_of_videos(user, constants.NUM_SAMPLE_VIDEOS)
+        videos, artist_dict, connection_dict = send_videos_to_display(videos)
+        return render_template("index.html", user=user, videos=videos, artists=artist_dict, connections=connection_dict, list_artists=utils.comma_list_artists)
+    return redirect("/login")
 
 def ci_username_exists(username):
     # Case-Insensitive check.
@@ -216,7 +215,7 @@ def specific_video_page(video_id):
         if artists[i].id in connections_dict:
             notes.append((i, a_connections[connections_dict[artists[i].id]].note))
     notes.sort(key = lambda x : artists[x[0]].name)             # abc sorted, might change.
-    all_tags = VideoTag.query.order_by(VideoTag.name).all()
+    all_tags = VideoTag.query.filter(VideoTag.id == user.id).order_by(VideoTag.name).all()
     t_connections = {vt.tag_id for vt in video.v_tags}
     specific_tags = VideoTag.query.filter(VideoTag.id.in_(t_connections)).order_by(VideoTag.name).all()
     return render_template("video.html", video = video, notes = notes, artists = artists, tags = all_tags, specific_tags = specific_tags)
