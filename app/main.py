@@ -12,7 +12,7 @@ app_config.configure_app(app)
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    __tablename__ = "users"
+    __tablename__ = "caydio_users"
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(50), unique = True)
     password = db.Column(db.String(255))
@@ -23,12 +23,12 @@ class User(db.Model):
     v_tags = db.relationship("VideoTag", backref = "user")
 
 class Artist(db.Model):
-    __tablename__ = "artists"
+    __tablename__ = "caydio_artists"
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(255))
     added = db.Column(db.DateTime(), default = db.func.now())
     videos = db.relationship("VidConnection")
-    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey('caydio_users.id', ondelete = 'CASCADE'))
 
     def get_readable_name(self):
         return self.name.replace("_", " ")
@@ -37,37 +37,37 @@ class Artist(db.Model):
         self.name = utils.artist_db_name(given_name)
 
 class Video(db.Model):
-    __tablename__ = "videos"
+    __tablename__ = "caydio_videos"
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(255))
     youtube_url = db.Column(db.String(50))
     added = db.Column(db.DateTime(), default = db.func.now())
     artists = db.relationship("VidConnection")
     v_tags = db.relationship("VTConn")
-    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete = 'CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey('caydio_users.id', ondelete = 'CASCADE'))
 
 class VidConnection(db.Model):
-    __tablename__ = "vid_connections"
+    __tablename__ = "caydio_vid_connections"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    artist_id = db.Column(db.Integer(), db.ForeignKey("artists.id"), primary_key = True, autoincrement = False)
-    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id"), primary_key = True, autoincrement = False)
+    artist_id = db.Column(db.Integer(), db.ForeignKey("caydio_artists.id"), primary_key = True, autoincrement = False)
+    video_id = db.Column(db.Integer(), db.ForeignKey("caydio_videos.id"), primary_key = True, autoincrement = False)
     artist = db.relationship(Artist, backref = "artists_c")
     video = db.relationship(Video, backref = "videos_c")
     note = db.Column(db.String(255))
 
 class VideoTag(db.Model):
-    __tablename__ = "video_tags"
+    __tablename__ = "caydio_video_tags"
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(255))
     v_tags = db.relationship("VTConn")
-    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey('caydio_users.id', ondelete='CASCADE'))
 
 class VTConn(db.Model):
-    __tablename__ = "vt_connections"
+    __tablename__ = "caydio_vt_connections"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id"), primary_key = True, autoincrement = False)
-    tag_id = db.Column(db.Integer(), db.ForeignKey("video_tags.id"), primary_key = True, autoincrement = False)
+    video_id = db.Column(db.Integer(), db.ForeignKey("caydio_videos.id"), primary_key = True, autoincrement = False)
+    tag_id = db.Column(db.Integer(), db.ForeignKey("caydio_video_tags.id"), primary_key = True, autoincrement = False)
     video = db.relationship(Video, backref = "videos_t")
     tag = db.relationship(VideoTag, backref = "tags_t")
 
